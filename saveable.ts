@@ -172,7 +172,7 @@ export abstract class Saveable<objectTypes extends string> {
   
   objectify(
     state: Record<string,any>,
-    builtInstances: Map<string, Map<string, Set<number>>> = null,
+    builtInstances: Map<string, Map<string, Map<number, Object>>> = null,
     preloadRoot: (obj: Saveable<objectTypes>, data: Record<string,any>) => void = null,
     root: Record<string,any> = state,
   ) {
@@ -207,7 +207,7 @@ export abstract class Saveable<objectTypes extends string> {
   private _objectify(
     key: string,
     obj: Record<string,any>,
-    builtInstances: Map<string, Map<string, Set<number>>> = null,
+    builtInstances: Map<string, Map<string, Map<number, Object>>> = null,
     preload: (obj: Saveable<objectTypes>, data: Record<string,any>) => void = null,
   ) {
     if (key.length < 3 || key.substring(0,2) != "$$") return null; // cannot be objectified
@@ -223,15 +223,17 @@ export abstract class Saveable<objectTypes extends string> {
       case "C": // (C)onstructor
         return loadClass.classname;
       case "I": { // (I)instance
+        let group: number = 0;
         if (builtInstances) {
-          const group = obj.group;
+          group = obj.group;
           if (!builtInstances.has(type)) builtInstances.set(type, new Map());
-          if (!builtInstances.get(type).has(name)) builtInstances.get(type).set(name, new Set());
-          if (builtInstances.get(type).get(name).has(group)) { debugger; return;}           // group already built
-          else if (group !== 0) builtInstances.get(type).get(name).add(group); // remember that group has been built (for future refreence)
+          if (!builtInstances.get(type).has(name)) builtInstances.get(type).set(name, new Map());
+          if (builtInstances.get(type).get(name).has(group)) return builtInstances.get(type).get(name).get(group); // group already built
         }
 
-        const instance = new loadClass.classname(obj.data.params) as Saveable<objectTypes>;
+        const instance = new loadClass.classname({ ...loadClass.params, ...obj.data.params }) as Saveable<objectTypes>;
+        if (group !== 0) builtInstances.get(type).get(name).set(group, instance); // remember that group has been built (for future refreence)
+
         if (preload) preload(instance, obj.data);
         instance?.load(obj.data);
         return instance;
