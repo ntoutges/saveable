@@ -144,10 +144,12 @@ export abstract class Saveable<objectTypes extends string> {
         group = usedInstances.get(type).get(name).size + 1;          // get new (unique) group id
         usedInstances.get(type).get(name).set(root[lastKey], group); // update usedInstances
       }
-
     }
 
-    if (typeof root[lastKey] == "function") root[lastKey] = { "$$C": { name: root[lastKey].name, type } }; // class
+    if (typeof root[lastKey] == "function") {
+      if (type !== "+") root[lastKey] = { "$$C": { name: root[lastKey].name, type } } // class
+      else root[lastKey] = { "$$F": { data: root[lastKey].toString() } };             // type of just "+" indicates stringified construction (function)
+    }
     else if (typeof root[lastKey] == "object") { // instance
       let data = null;
       if (root[lastKey]?.save) data = root[lastKey]?.save();
@@ -212,6 +214,8 @@ export abstract class Saveable<objectTypes extends string> {
   ) {
     if (key.length < 3 || key.substring(0,2) != "$$") return null; // cannot be objectified
     
+    if (key[2] == "F") return Function("return " + obj.data)(); // given function
+
     const { type, name } = obj;
 
     const loadClass = this.objectRepository.getObject(type as objectTypes, name);
@@ -219,6 +223,7 @@ export abstract class Saveable<objectTypes extends string> {
       console.error(`Unable to find load class ${type}.${name}`)
       return null;
     }
+
     switch (key[2]) {
       case "C": // (C)onstructor
         return loadClass.classname;
