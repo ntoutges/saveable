@@ -183,7 +183,7 @@ export abstract class Saveable<objectTypes extends string> {
     while (queue.length > 0) {
       const [obj, lastKey, nextKeys] = queue[queue.length-1];
       const lastObj = obj[lastKey];
-      
+
       if (nextKeys.length == 0) { // queue empty: objectify
         for (const key in lastObj) {
           const objectified = this._objectify(key, lastObj[key], builtInstances, obj == root ? preloadRoot : null);
