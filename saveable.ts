@@ -77,7 +77,7 @@ export abstract class Saveable<objectTypes extends string> {
         objUtils.smartSplit(objectification, ".", { "\"": "\"" }),
         "*"
       );
-      if (Array.isArray(segments[0]) && segments[0].length == 0) segments.shift(); // empty selector, remove it
+    //   if (Array.isArray(segments[0]) && segments[0].length == 0) segments.shift(); // empty selector, remove it
       
       let roots = [obj];
       for (const i in segments) { // get all but last segment
